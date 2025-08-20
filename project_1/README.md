@@ -29,7 +29,7 @@
 
 ### Installation
 
-## 1. **Clone the repository**
+### 1. **Clone the repository**
   git clone https://github.com/yourusername/cti-threat-intelligence-dashboard.git
   cd cti-threat-intelligence-dashboard
 
