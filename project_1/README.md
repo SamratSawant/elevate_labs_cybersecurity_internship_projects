@@ -35,7 +35,7 @@ git clone https://github.com/yourusername/cti-threat-intelligence-dashboard.git
 
 cd cti-threat-intelligence-dashboard
 
-3. **Set up virtual environment**
+2. **Set up virtual environment**
   python -m venv venv
 
   **On Windows**
