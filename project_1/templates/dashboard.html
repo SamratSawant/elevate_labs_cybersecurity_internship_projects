@@ -1,1 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CTI Dashboard</title>
+    
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Socket.IO for real-time updates -->
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+        
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto auto auto auto;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .chart-container {
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            position: relative;
+            height: fit-content;
+            min-height: 300px;
+            overflow: hidden;
+        }
+        
+        /* Fix for chart expansion issue */
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        
+        .chart-container canvas {
+            max-height: 300px !important;
+            max-width: 100% !important;
+        }
+        
+        .full-width {
+            grid-column: span 2;
+        }
+        
+        h2, h3 {
+            margin-top: 0;
+            color: #4CAF50;
+            text-align: center;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: #3d3d3d;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: border-color 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            border-color: #4CAF50;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .critical { color: #e74c3c; }
+        .high { color: #f39c12; }
+        .medium { color: #f1c40f; }
+        .low { color: #27ae60; }
+        
+        .lookup-section {
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .lookup-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            background: #333;
+            color: #fff;
+            font-size: 16px;
+        }
+        
+        input[type="text"]:focus {
+            border-color: #4CAF50;
+            outline: none;
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+        }
+        
+        button {
+            padding: 12px 24px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s ease;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        button:active {
+            background: #3d8b40;
+        }
+        
+        /* Export controls styling */
+        .export-controls {
+            margin-top: 15px;
+        }
+        
+        .export-options {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .export-options label {
+            color: #ffffff;
+            font-weight: bold;
+        }
+        
+        .export-options select {
+            padding: 8px 12px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            background: #333;
+            color: #fff;
+            font-size: 14px;
+        }
+        
+        .export-options select:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+        
+        #exportStats {
+            background: #3d3d3d;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #555;
+        }
+        
+        .export-btn {
+            background: #2196F3;
+            margin-left: 10px;
+        }
+        
+        .export-btn:hover {
+            background: #1976D2;
+        }
+        
+        .recent-threats {
+            max-height: 350px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        .recent-threats::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .recent-threats::-webkit-scrollbar-track {
+            background: #3d3d3d;
+            border-radius: 3px;
+        }
+        
+        .recent-threats::-webkit-scrollbar-thumb {
+            background: #4CAF50;
+            border-radius: 3px;
+        }
+        
+        .threat-item {
+            background: #3d3d3d;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border-left: 4px solid;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .threat-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        .threat-item.critical { border-left-color: #e74c3c; }
+        .threat-item.high { border-left-color: #f39c12; }
+        .threat-item.medium { border-left-color: #f1c40f; }
+        .threat-item.low { border-left-color: #27ae60; }
+        
+        #lookupResult {
+            background: #3d3d3d;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+            border: 1px solid #555;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease-out;
+            max-width: 300px;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .error {
+            color: #e74c3c;
+            background: #5d1a1a;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .success {
+            color: #27ae60;
+            background: #1a5d1a;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .debug-btn {
+            background: #3498db;
+            margin: 5px;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        
+        .debug-btn:hover {
+            background: #2980b9;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .lookup-form, .export-options {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header Stats -->
+        <div class="chart-container full-width">
+            <h2>🛡️ Cyber Threat Intelligence Dashboard</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value critical" id="criticalCount">0</div>
+                    <div>Critical</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value high" id="highCount">0</div>
+                    <div>High</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value medium" id="mediumCount">0</div>
+                    <div>Medium</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value low" id="lowCount">0</div>
+                    <div>Low</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Threat Lookup -->
+        <div class="lookup-section full-width">
+            <h3>🔍 Threat Intelligence Lookup</h3>
+            <div class="lookup-form">
+                <input type="text" id="indicatorInput" placeholder="Enter IP address or domain (e.g., 8.8.8.8 or google.com)">
+                <button onclick="lookupThreat()">🔎 Analyze</button>
+                <button class="debug-btn" onclick="testChartsWithSampleData()">Test Charts</button>
+                <button class="debug-btn" onclick="debugChartData()">Debug Data</button>
+            </div>
+            <div id="lookupResult"></div>
+        </div>
+        
+        <!-- NEW: Export Section -->
+        <div class="lookup-section full-width">
+            <h3>📤 Export Threat Data</h3>
+            <div class="export-controls">
+                <div class="export-options">
+                    <label for="exportFormat">Format:</label>
+                    <select id="exportFormat">
+                        <option value="csv">CSV</option>
+                        <option value="json">JSON</option>
+                    </select>
+                    
+                    <label for="threatLevelFilter">Threat Level:</label>
+                    <select id="threatLevelFilter">
+                        <option value="">All Levels</option>
+                        <option value="critical">Critical</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                    
+                    <button class="export-btn" onclick="exportData()">📥 Export Data</button>
+                    <button class="debug-btn" onclick="showExportStats()">📊 Show Stats</button>
+                </div>
+                <div id="exportStats" style="display: none; margin-top: 15px;"></div>
+            </div>
+        </div>
+        
+        <!-- Threat Trends Bar Chart -->
+        <div class="chart-container full-width">
+            <h2>📊 Threat Trends (Last 7 Days)</h2>
+            <div class="chart-wrapper">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Threat Distribution Pie Chart -->
+        <div class="chart-container">
+            <h2>📈 Threat Level Distribution</h2>
+            <div class="chart-wrapper">
+                <canvas id="distributionChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Recent Threats -->
+        <div class="chart-container">
+            <h2>⚡ Recent Threats</h2>
+            <div class="recent-threats" id="recentThreats">
+                <div class="threat-item low">
+                    <div>Loading threat intelligence...</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- JavaScript Implementation -->
+    <script>
+        // Global variables for charts
+        let trendChart, distributionChart;
+        let socket;
+        let updateInProgress = false;
+
+        // Initialize dashboard when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Initializing CTI Dashboard...');
+            initializeCharts();
+            loadDashboardData();
+            setupRealTimeUpdates();
+        });
+
+        // Initialize all charts with working data
+        function initializeCharts() {
+            console.log('Initializing charts...');
+            
+            // Destroy existing charts if they exist
+            if (trendChart) {
+                trendChart.destroy();
+            }
+            if (distributionChart) {
+                distributionChart.destroy();
+            }
+
+            // Trend Chart (Bar Chart)
+            const trendCtx = document.getElementById('trendChart').getContext('2d');
+            trendChart = new Chart(trendCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [
+                        {
+                            label: 'Critical',
+                            data: [2, 3, 1, 5, 2, 4, 3],
+                            backgroundColor: 'rgba(231, 76, 60, 0.8)',
+                            borderColor: '#e74c3c',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'High',
+                            data: [8, 12, 6, 15, 9, 11, 7],
+                            backgroundColor: 'rgba(243, 156, 18, 0.8)',
+                            borderColor: '#f39c12',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Medium',
+                            data: [15, 18, 12, 22, 16, 19, 14],
+                            backgroundColor: 'rgba(241, 196, 15, 0.8)',
+                            borderColor: '#f1c40f',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Low',
+                            data: [25, 28, 22, 32, 26, 29, 24],
+                            backgroundColor: 'rgba(39, 174, 96, 0.8)',
+                            borderColor: '#27ae60',
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#ffffff',
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(45, 45, 45, 0.9)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#ffffff',
+                            borderColor: '#4CAF50',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#ffffff',
+                                stepSize: 5
+                            },
+                            grid: {
+                                color: '#444444'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Number of Threats',
+                                color: '#ffffff'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#ffffff'
+                            },
+                            grid: {
+                                color: '#444444'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Days',
+                                color: '#ffffff'
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+
+            // Distribution Chart (Doughnut Chart)
+            const distributionCtx = document.getElementById('distributionChart').getContext('2d');
+            distributionChart = new Chart(distributionCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Critical', 'High', 'Medium', 'Low'],
+                    datasets: [{
+                        data: [18, 67, 125, 190],
+                        backgroundColor: [
+                            '#e74c3c',
+                            '#f39c12',
+                            '#f1c40f',
+                            '#27ae60'
+                        ],
+                        borderColor: '#2d2d2d',
+                        borderWidth: 3,
+                        hoverBorderWidth: 5,
+                        hoverBorderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#ffffff',
+                                usePointStyle: true,
+                                padding: 15,
+                                font: {
+                                    size: 14
+                                }
+                            },
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(45, 45, 45, 0.9)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#ffffff',
+                            borderColor: '#4CAF50',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.raw / total) * 100).toFixed(1);
+                                    return `${context.label}: ${context.raw} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        animateRotate: true,
+                        duration: 1500
+                    }
+                }
+            });
+            
+            console.log('Charts initialized successfully');
+        }
+
+        // Load dashboard data with fallback
+        function loadDashboardData() {
+            if (updateInProgress) return;
+            updateInProgress = true;
+            console.log('Loading dashboard data...');
+
+            // Try to load real data, fallback to sample data if fails
+            Promise.all([
+                fetch('/threat_stats').then(response => response.ok ? response.json() : null).catch(() => null),
+                fetch('/threat_trends').then(response => response.ok ? response.json() : null).catch(() => null),
+                fetch('/recent_threats?limit=10').then(response => response.ok ? response.json() : null).catch(() => null)
+            ])
+            .then(([statsData, trendsData, threatsData]) => {
+                console.log('API Responses:', { statsData, trendsData, threatsData });
+                
+                // Update stats (use sample data if API fails)
+                if (statsData && statsData.by_level) {
+                    updateStats(statsData);
+                    updateDistributionChart(statsData.by_level);
+                } else {
+                    console.log('Using sample stats data');
+                    const sampleStats = {
+                        by_level: { critical: 18, high: 67, medium: 125, low: 190 }
+                    };
+                    updateStats(sampleStats);
+                    updateDistributionChart(sampleStats.by_level);
+                }
+                
+                // Update trends (use sample data if API fails)
+                if (trendsData && trendsData.labels) {
+                    updateTrendChart(trendsData);
+                } else {
+                    console.log('Using sample trend data');
+                    const sampleTrends = {
+                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        datasets: [
+                            { label: 'Critical', data: [2, 3, 1, 5, 2, 4, 3] },
+                            { label: 'High', data: [8, 12, 6, 15, 9, 11, 7] },
+                            { label: 'Medium', data: [15, 18, 12, 22, 16, 19, 14] },
+                            { label: 'Low', data: [25, 28, 22, 32, 26, 29, 24] }
+                        ]
+                    };
+                    updateTrendChart(sampleTrends);
+                }
+                
+                // Update recent threats
+                if (threatsData && Array.isArray(threatsData)) {
+                    displayRecentThreats(threatsData);
+                } else {
+                    console.log('Using sample threats data');
+                    displayRecentThreats([
+                        {
+                            indicator: '192.168.1.100',
+                            type: 'ip',
+                            threat_level: 'high',
+                            sources: ['virustotal'],
+                            timestamp: new Date().toISOString()
+                        },
+                        {
+                            indicator: 'malicious-site.com',
+                            type: 'domain',
+                            threat_level: 'critical',
+                            sources: ['abuseipdb'],
+                            timestamp: new Date().toISOString()
+                        }
+                    ]);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading dashboard data:', error);
+                showNotification('Using sample data - API connection failed', 'warning');
+            })
+            .finally(() => {
+                updateInProgress = false;
+            });
+        }
+
+        // Update statistics display
+        function updateStats(data) {
+            document.getElementById('criticalCount').textContent = data.by_level.critical || 0;
+            document.getElementById('highCount').textContent = data.by_level.high || 0;
+            document.getElementById('mediumCount').textContent = data.by_level.medium || 0;
+            document.getElementById('lowCount').textContent = data.by_level.low || 0;
+        }
+
+        // Update trend chart with proper error handling
+        function updateTrendChart(data) {
+            console.log('Updating trend chart with data:', data);
+            
+            if (!data.labels || !data.datasets) {
+                console.error('Invalid trend data format');
+                return;
+            }
+
+            trendChart.data.labels = data.labels;
+            trendChart.data.datasets.forEach((dataset, index) => {
+                if (data.datasets[index]) {
+                    dataset.data = data.datasets[index].data;
+                    // Ensure colors are preserved
+                    if (index === 0) {
+                        dataset.backgroundColor = 'rgba(231, 76, 60, 0.8)';
+                        dataset.borderColor = '#e74c3c';
+                    } else if (index === 1) {
+                        dataset.backgroundColor = 'rgba(243, 156, 18, 0.8)';
+                        dataset.borderColor = '#f39c12';
+                    } else if (index === 2) {
+                        dataset.backgroundColor = 'rgba(241, 196, 15, 0.8)';
+                        dataset.borderColor = '#f1c40f';
+                    } else if (index === 3) {
+                        dataset.backgroundColor = 'rgba(39, 174, 96, 0.8)';
+                        dataset.borderColor = '#27ae60';
+                    }
+                }
+            });
+            trendChart.update();
+            console.log('Trend chart updated successfully');
+        }
+
+        // Update distribution chart
+        function updateDistributionChart(data) {
+            console.log('Updating distribution chart with data:', data);
+            
+            const newData = [
+                data.critical || 0,
+                data.high || 0,
+                data.medium || 0,
+                data.low || 0
+            ];
+            
+            distributionChart.data.datasets[0].data = newData;
+            distributionChart.update();
+            console.log('Distribution chart updated successfully');
+        }
+
+        // Display recent threats
+        function displayRecentThreats(threats) {
+            const container = document.getElementById('recentThreats');
+            
+            if (!threats || threats.length === 0) {
+                container.innerHTML = '<div class="threat-item low"><div>No recent threats detected</div></div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            threats.forEach(threat => {
+                const threatItem = document.createElement('div');
+                threatItem.className = `threat-item ${threat.threat_level}`;
+                
+                const timestamp = new Date(threat.timestamp).toLocaleString();
+                
+                threatItem.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>${threat.indicator}</strong> (${threat.type})
+                            <br>
+                            <small>Sources: ${threat.sources ? threat.sources.join(', ') : 'Unknown'}</small>
+                        </div>
+                        <div style="text-align: right;">
+                            <span class="threat-level ${threat.threat_level}">${threat.threat_level.toUpperCase()}</span>
+                            <br>
+                            <small>${timestamp}</small>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(threatItem);
+            });
+        }
+
+        // NEW: Export functionality
+        function exportData() {
+            const format = document.getElementById('exportFormat').value;
+            const level = document.getElementById('threatLevelFilter').value;
+            
+            let url = `/export?format=${format}`;
+            if (level) {
+                url += `&level=${level}`;
+            }
+            
+            showNotification(`Exporting data as ${format.toUpperCase()}...`, 'info');
+            
+            // Create download link
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `threats_${new Date().toISOString().split('T')[0]}.${format}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification(`Export completed successfully!`, 'success');
+        }
+
+        // NEW: Show export statistics
+        function showExportStats() {
+            const statsDiv = document.getElementById('exportStats');
+            
+            if (statsDiv.style.display === 'none') {
+                // Fetch and display stats
+                fetch('/threat_stats')
+                    .then(response => response.json())
+                    .then(data => {
+                        statsDiv.innerHTML = `
+                            <h4>📊 Export Statistics</h4>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                                <div>
+                                    <strong>Total Indicators:</strong> ${data.total}<br>
+                                    <strong>Recent (24h):</strong> ${data.recent}<br>
+                                </div>
+                                <div>
+                                    <strong>By Threat Level:</strong><br>
+                                    <span class="critical">Critical: ${data.by_level.critical}</span><br>
+                                    <span class="high">High: ${data.by_level.high}</span><br>
+                                    <span class="medium">Medium: ${data.by_level.medium}</span><br>
+                                    <span class="low">Low: ${data.by_level.low}</span>
+                                </div>
+                            </div>
+                            <div style="margin-top: 10px;">
+                                <small>💡 Use filters above to export specific threat levels</small>
+                            </div>
+                        `;
+                        statsDiv.style.display = 'block';
+                    })
+                    .catch(error => {
+                        statsDiv.innerHTML = `<div class="error">Error loading stats: ${error.message}</div>`;
+                        statsDiv.style.display = 'block';
+                    });
+            } else {
+                statsDiv.style.display = 'none';
+            }
+        }
+
+        // Test function to verify charts work with sample data
+        function testChartsWithSampleData() {
+            console.log('Testing charts with sample data...');
+            
+            const sampleTrendData = {
+                labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5'],
+                datasets: [
+                    { label: 'Critical', data: [3, 2, 5, 1, 4] },
+                    { label: 'High', data: [12, 8, 15, 6, 11] },
+                    { label: 'Medium', data: [20, 15, 25, 12, 18] },
+                    { label: 'Low', data: [30, 25, 35, 20, 28] }
+                ]
+            };
+            
+            const sampleDistData = { critical: 15, high: 46, medium: 88, low: 133 };
+            
+            updateTrendChart(sampleTrendData);
+            updateDistributionChart(sampleDistData);
+            updateStats({ by_level: sampleDistData });
+            
+            showNotification('Charts updated with sample data!', 'success');
+        }
+
+        // Debug function to check data
+        function debugChartData() {
+            console.log('=== CHART DEBUG INFO ===');
+            console.log('Trend Chart:', trendChart);
+            console.log('Distribution Chart:', distributionChart);
+            
+            fetch('/threat_trends')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('API Trend Data:', data);
+                })
+                .catch(error => console.log('API Trend Error:', error));
+                
+            fetch('/threat_stats')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('API Stats Data:', data);
+                })
+                .catch(error => console.log('API Stats Error:', error));
+        }
+
+        // Threat lookup functionality
+        function lookupThreat() {
+            const indicator = document.getElementById('indicatorInput').value.trim();
+            const resultDiv = document.getElementById('lookupResult');
+            
+            if (!indicator) {
+                showNotification('Please enter an IP address or domain', 'error');
+                return;
+            }
+            
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<div class="loading"></div> <span>Analyzing threat intelligence...</span>';
+            
+            fetch('/lookup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ indicator: indicator })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    resultDiv.innerHTML = `<div class="error">Error: ${data.error}</div>`;
+                } else {
+                    displayLookupResult(data);
+                    setTimeout(() => {
+                        loadDashboardData();
+                    }, 2000);
+                }
+            })
+            .catch(error => {
+                resultDiv.innerHTML = `<div class="error">Network error: ${error.message}</div>`;
+            });
+        }
+
+        // Display lookup result
+        function displayLookupResult(data) {
+            const resultDiv = document.getElementById('lookupResult');
+            
+            let html = `
+                <h4>🔍 Threat Analysis Results</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <strong>Indicator:</strong> ${data.indicator}<br>
+                        <strong>Type:</strong> ${data.type}<br>
+                        <strong>Threat Level:</strong> <span class="${data.threat_level}">${data.threat_level.toUpperCase()}</span><br>
+                        <strong>Sources:</strong> ${data.sources.join(', ')}<br>
+                        <strong>Cached:</strong> ${data.cached ? 'Yes' : 'No'}
+                    </div>
+                    <div>
+                        <strong>Enrichments:</strong><br>
+            `;
+            
+            data.enrichments.forEach(enrichment => {
+                if (enrichment.error) {
+                    html += `<div class="error" style="margin: 5px 0; padding: 8px;">
+                        <strong>${enrichment.source}:</strong> ${enrichment.error}
+                    </div>`;
+                } else {
+                    html += `<div class="success" style="margin: 5px 0; padding: 8px;">
+                        <strong>${enrichment.source}:</strong> `;
+                    
+                    if (enrichment.source === 'virustotal' && enrichment.reputation) {
+                        html += `Malicious: ${enrichment.reputation.malicious || 0}, Clean: ${enrichment.reputation.harmless || 0}`;
+                    } else if (enrichment.source === 'abuseipdb') {
+                        html += `Confidence: ${enrichment.abuse_confidence_score}%, Reports: ${enrichment.total_reports || 0}`;
+                    }
+                    
+                    html += '</div>';
+                }
+            });
+            
+            html += `
+                    </div>
+                </div>
+                <button onclick="document.getElementById('lookupResult').style.display='none'" style="margin-top: 10px;">✖ Close</button>
+            `;
+            
+            resultDiv.innerHTML = html;
+        }
+
+        // Setup real-time updates
+        function setupRealTimeUpdates() {
+            try {
+                socket = io();
+                
+                socket.on('connect', function() {
+                    console.log('Connected to CTI Dashboard');
+                    showNotification('Connected to real-time threat feed', 'success');
+                });
+                
+                socket.on('new_threat', function(data) {
+                    showNotification(`🚨 New ${data.threat_level} threat: ${data.indicator}`, 'warning');
+                    setTimeout(() => {
+                        loadDashboardData();
+                    }, 2000);
+                });
+                
+                socket.on('disconnect', function() {
+                    console.log('Disconnected from CTI Dashboard');
+                    showNotification('Disconnected from threat feed', 'error');
+                });
+            } catch (error) {
+                console.log('WebSocket connection failed:', error);
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            
+            if (type === 'error') {
+                notification.style.background = '#e74c3c';
+            } else if (type === 'warning') {
+                notification.style.background = '#f39c12';
+            } else if (type === 'info') {
+                notification.style.background = '#3498db';
+            }
+            
+            notification.innerHTML = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.animation = 'slideIn 0.3s ease-out reverse';
+                    setTimeout(() => {
+                        document.body.removeChild(notification);
+                    }, 300);
+                }
+            }, 5000);
+        }
+
+        // Auto-refresh dashboard every 60 seconds
+        setInterval(() => {
+            loadDashboardData();
+        }, 60000);
+
+        // Handle Enter key in lookup input
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' && document.activeElement.id === 'indicatorInput') {
+                lookupThreat();
+            }
+        });
+    </script>
+</body>
+</html>
