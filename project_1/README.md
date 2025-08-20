@@ -30,56 +30,56 @@
 ### Installation
 
 1. **Clone the repository**
-git clone https://github.com/yourusername/cti-threat-intelligence-dashboard.git
-cd cti-threat-intelligence-dashboard
+  git clone https://github.com/yourusername/cti-threat-intelligence-dashboard.git
+  cd cti-threat-intelligence-dashboard
 
 2. **Set up virtual environment**
-python -m venv venv
+  python -m venv venv
 
-**On Windows**
-venv\Scripts\activate
+  **On Windows**
+  venv\Scripts\activate
 
-**On macOS/Linux**
-source venv/bin/activate
+  **On macOS/Linux**
+  source venv/bin/activate
 
 3. **Install dependencies**
-pip install -r requirements.txt
+  pip install -r requirements.txt
 
 4. **Configure environment variables**
-**Copy environment template**
-cp .env.example .env
-**Edit .env with your API keys**
+  **Copy environment template**
+  cp .env.example .env
+  **Edit .env with your API keys**
 
 5. **Start MongoDB**
-**On Windows**
-net start MongoDB
+  **On Windows**
+  net start MongoDB
 
 **On macOS/Linux**
-sudo systemctl start mongod
+  sudo systemctl start mongod
 
 6. **Run the application**
-python app.py
+  python app.py
 
 7. **Access the dashboard**
-http://localhost:5000
+  http://localhost:5000
 
 ## 🔧 Configuration
 
 ### Environment Variables (.env)
 **Flask Configuration**
-SECRET_KEY=your_secret_key_here
-FLASK_ENV=development
+  SECRET_KEY=your_secret_key_here
+  FLASK_ENV=development
 
 **Database**
-MONGO_URI=mongodb://localhost:27017/cti_dashboard
+  MONGO_URI=mongodb://localhost:27017/cti_dashboard
 
 **API Keys**
-VT_API_KEY=your_virustotal_api_key_here
-ABUSEIPDB_KEY=your_abuseipdb_api_key_here
+  VT_API_KEY=your_virustotal_api_key_here
+  ABUSEIPDB_KEY=your_abuseipdb_api_key_here
 
 **Optional Settings**
-DEBUG=True
-LOG_LEVEL=INFO
+  DEBUG=True
+  LOG_LEVEL=INFO
 
 ## 🔌 API Endpoints
 
@@ -94,15 +94,15 @@ LOG_LEVEL=INFO
 
 ### Example Usage
 **Lookup threat intelligence for an IP**
-curl -X POST http://localhost:5000/lookup
--H "Content-Type: application/json"
--d '{"indicator": "8.8.8.8"}'
+  curl -X POST http://localhost:5000/lookup
+  -H "Content-Type: application/json"
+  -d '{"indicator": "8.8.8.8"}'
 
 **Get threat statistics**
-curl http://localhost:5000/threat_stats
+  curl http://localhost:5000/threat_stats
 
 **Export critical threats as CSV**
-curl "http://localhost:5000/export?format=csv&level=critical" > threats.csv
+  curl "http://localhost:5000/export?format=csv&level=critical" > threats.csv
 
 ## 🛠️ Technology Stack
 
