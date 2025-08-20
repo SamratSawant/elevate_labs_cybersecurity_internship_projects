@@ -30,8 +30,8 @@
 ### Installation
 
 ### 1. **Clone the repository**
-  # git clone https://github.com/yourusername/cti-threat-intelligence-dashboard.git
-  # cd cti-threat-intelligence-dashboard
+  #### git clone https://github.com/yourusername/cti-threat-intelligence-dashboard.git
+  #### cd cti-threat-intelligence-dashboard
 
 2. **Set up virtual environment**
   python -m venv venv
