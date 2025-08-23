@@ -1,0 +1,36 @@
+# Network Packet Sniffer - Universal Requirements
+# Works on Windows, Linux, and macOS
+
+# Core Dependencies
+scapy>=2.4.5
+matplotlib>=3.5.0
+Pillow>=8.0.0
+
+# Optional: Enhanced logging and colors
+coloredlogs>=15.0
+
+# Development and Testing (optional)
+pytest>=6.0.0
+pytest-cov>=2.0.0
+
+# Platform-specific notes:
+# 
+# Windows:
+# - tkinter is included with Python (don't install via pip)
+# - Install Npcap separately: https://npcap.com/
+# - May need to run as Administrator for packet capture
+#
+# Linux/Ubuntu:
+# - sudo apt-get install python3-tk libpcap-dev
+# - Use sudo for packet capture
+#
+# macOS:
+# - brew install python-tk libpcap (if using Homebrew)
+# - Use sudo for packet capture
+#
+# Standard Library Modules (no installation needed):
+# - tkinter (GUI framework)
+# - sqlite3 (database)
+# - smtplib (email)
+# - threading (concurrency)
+# - json (configuration)
