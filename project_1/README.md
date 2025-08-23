@@ -117,7 +117,8 @@
 
 ## 🏗️ Architecture
 
-<img width="1024" height="1536" alt="architecture_project_1" src="https://github.com/user-attachments/assets/48fce169-4403-4914-ac6a-c6242ef17f49" />
+<img width="1185" height="603" alt="architecture_project_1" src="https://github.com/user-attachments/assets/bd5b07b3-97da-44e4-8901-b538efbfcb05" />
+
 
 ## 📸 How to Use
 
