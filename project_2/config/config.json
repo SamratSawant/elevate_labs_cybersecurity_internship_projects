@@ -1,1 +1,29 @@
-
+{
+    "database_path": "network_monitor.db",
+    "interface": null,
+    "email": {
+        "enabled": false,
+        "smtp_server": "smtp.gmail.com",
+        "smtp_port": 587,
+        "username": "your_email@gmail.com",
+        "password": "your_app_password",
+        "recipients": [
+            "admin@company.com"
+        ]
+    },
+    "thresholds": {
+        "port_scan_threshold": 20,
+        "flood_threshold": 100,
+        "large_packet_threshold": 1500,
+        "time_window": 60
+    },
+    "logging": {
+        "level": "INFO",
+        "file": "sniffer.log"
+    },
+    "capture": {
+        "max_packet_size": 1500,
+        "buffer_size": 1000,
+        "auto_cleanup_days": 30
+    }
+}
