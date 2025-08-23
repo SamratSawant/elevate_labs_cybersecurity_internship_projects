@@ -108,7 +108,16 @@ risk_score = calculator.calculate_risk(packet_data)
 4. Alerts will be sent automatically for HIGH/CRITICAL threats
 
 ## 🏗️ Architecture
-![architecture_project_2](https://github.com/user-attachments/assets/c21bc625-9700-49b9-8a49-f01019836884)
+
+<img width="2478" height="1052" alt="architecture_project_2" src="https://github.com/user-attachments/assets/4db0b93b-2105-48f4-a17c-2e5ab79a1fcd" />
+
+<img width="1080" height="809" alt="component_project_2" src="https://github.com/user-attachments/assets/e3f21971-f26a-4672-ad8b-a1956c994452" />
+
+<img width="752" height="1055" alt="sequence_project_2" src="https://github.com/user-attachments/assets/16e9b234-29fd-4a75-a245-e11f98069fa8" />
+
+<img width="1730" height="653" alt="deployment_project_2" src="https://github.com/user-attachments/assets/989eddba-e692-43ee-a388-16ab37f1449d" />
+
+<img width="670" height="1262" alt="security_project_2" src="https://github.com/user-attachments/assets/14b6dcb7-1632-4806-8961-c89149c48074" />
 
 ## 📊 Performance
 
