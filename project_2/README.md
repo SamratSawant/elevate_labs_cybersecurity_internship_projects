@@ -6,8 +6,6 @@
 
 A comprehensive network packet sniffer with advanced security monitoring capabilities, real-time threat detection, and intelligent anomaly analysis. Built with Python, Scapy, and Tkinter for cross-platform network security monitoring.
 
-![Main Dashboard](docs/images/screenshot_main.png)
-
 ## ✨ Features
 
 ### 🛡️ Advanced Security Monitoring
