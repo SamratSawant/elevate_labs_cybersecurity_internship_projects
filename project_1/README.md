@@ -31,9 +31,9 @@
 
 1. **Clone the repository**
 
-git clone https://github.com/SamratSawant/elevate_labs_cybersecurity_internship_projects/tree/main/project_1
+  git clone https://github.com/SamratSawant/elevate_labs_cybersecurity_internship_projects/tree/main/project_1
 
-cd project_1
+  cd project_1
 
 2. **Set up virtual environment**
   python -m venv venv
