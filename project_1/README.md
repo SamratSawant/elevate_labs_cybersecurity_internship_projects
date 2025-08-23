@@ -119,6 +119,13 @@
 
 <img width="1185" height="603" alt="architecture_project_1" src="https://github.com/user-attachments/assets/bd5b07b3-97da-44e4-8901-b538efbfcb05" />
 
+<img width="1265" height="880" alt="component_project_1" src="https://github.com/user-attachments/assets/b454da0e-ca1d-4231-8112-29c39ce9bd1c" />
+
+<img width="897" height="685" alt="sequence_project_1" src="https://github.com/user-attachments/assets/0dd99b13-4989-436f-9a3e-790e30d5a07d" />
+
+<img width="1280" height="520" alt="deployment_project_1" src="https://github.com/user-attachments/assets/d4d806f2-c819-4e56-b749-3d8cdf3fa66a" />
+
+<img width="774" height="576" alt="security_project_1" src="https://github.com/user-attachments/assets/33ef0991-7074-49b1-b0b0-d4460298ab04" />
 
 ## 📸 How to Use
 
